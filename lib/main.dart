@@ -1,14 +1,18 @@
+import 'dart:convert';
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:csv/csv.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 import 'DetailScreen.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:screenshot/screenshot.dart';
 
-void main() {
+Future<void> main() async {
+  await Hive.openBox('wordBox');
   runApp(const MyApp());
 }
 
@@ -20,9 +24,12 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: '草書字典',
-      theme: ThemeData(
-        primarySwatch: Colors.blueGrey,
+      darkTheme: ThemeData(
+        brightness: Brightness.dark,
+        /* dark theme settings */
       ),
+      themeMode: ThemeMode.dark,
+      debugShowCheckedModeBanner: false,
       // darkTheme: ThemeData(
       //   brightness: Brightness.dark,
       // ),
@@ -42,15 +49,6 @@ class MyApp extends StatelessWidget {
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
 
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
   final String title;
 
   @override
@@ -62,34 +60,15 @@ class _MyHomePageState extends State<MyHomePage> {
 
   final _controller = TextEditingController();
   List<String> searchStrings = [];
-  String poems = '';
-  List<Poem> poemList = [];
-  void loadAsset() async {
-    await rootBundle.loadString('assets/poems.csv').then((value) {
-      poems = value;
-      List<List<dynamic>> rowsAsListOfValues =
-          const CsvToListConverter().convert(poems);
-      for (var i = 1; i < rowsAsListOfValues.length; i++) {
-        List<dynamic> value = rowsAsListOfValues[i];
-        var poem = Poem(
-            name: value[0],
-            author: value[1],
-            poetic: value[2],
-            content: value[3]);
-        poemList.add(poem);
-      }
-    });
-  }
 
   /// Regex of Chinese character.
   static const String regexZh = '[\\u4e00-\\u9fa5]';
 
   @override
-  void initState(){
+  void initState() {
     super.initState();
-    loadAsset();
+    init();
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -111,13 +90,15 @@ class _MyHomePageState extends State<MyHomePage> {
                       return Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Text(
-                              searchStrings[index],
-                              style: const TextStyle(fontSize: 18),
-                            ),
-                          ),
+                          // Image.memory(Uint8List.fromList(Hive.box('wordBox').get('二')[0])),
+                      // Image(image: AssetImage('images/${searchStrings[index].codeUnitAt(0)}.png')),
+                      //     Padding(
+                      //       padding: const EdgeInsets.all(8.0),
+                      //       child: Text(
+                      //         searchStrings[index],
+                      //         style: const TextStyle(fontSize: 18),
+                      //       ),
+                      //     ),
                           Expanded(
                             child: FittedBox(
                               fit: BoxFit.fitHeight,
@@ -284,6 +265,26 @@ class _MyHomePageState extends State<MyHomePage> {
                 : Container()),
       ),
     );
+  }
+
+  void init() async{
+    var box = await Hive.openBox('wordBox');
+    final manifestJson = await rootBundle.loadString('AssetManifest.json');
+    final images = json.decode(manifestJson).keys.where((String key) => key.startsWith('assets/images'));
+    for(var i in images){
+      print(i);
+    }
+    //TODO 建立所有字的資料夾, 把圖片寫入對應的字
+
+    ByteData data = await rootBundle.load("assets/images/二.png");
+    ByteData data2 = await rootBundle.load("assets/images/20116.png");
+    // TODO 改成資料夾可以一個字對多張圖片
+    List<Uint8List> list = [];
+    Uint8List bytes = data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+    Uint8List bytes2 = data2.buffer.asUint8List(data2.offsetInBytes, data2.lengthInBytes);
+    list.add(bytes2);
+    list.add(bytes);
+    box.put('二', list);
   }
 
 }
