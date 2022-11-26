@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'main.dart';
+
 class DetailScreen extends StatelessWidget {
   DetailScreen({super.key});
 
@@ -19,42 +20,19 @@ class DetailScreen extends StatelessWidget {
 
   final List<Poem> poemList = [];
   loadAsset() async {
-    var strings = [];
     await rootBundle.loadString('assets/poems.csv').then((value) {
       List<List<dynamic>> rowsAsListOfValues =
           const CsvToListConverter().convert(value);
       for (var i = 1; i < rowsAsListOfValues.length; i++) {
         List<dynamic> value = rowsAsListOfValues[i];
-        value[0].toString().runes.forEach((element) {
-          var character=String.fromCharCode(element);
-          strings.add(character);
-        });
-        value[1].toString().runes.forEach((element) {
-          var character=String.fromCharCode(element);
-          strings.add(character);
-        });
-        value[2].toString().runes.forEach((element) {
-          var character=String.fromCharCode(element);
-          strings.add(character);
-        });
-        value[3].toString().runes.forEach((element) {
-          var character=String.fromCharCode(element);
-          strings.add(character);
-        });
-        if(value[3].toString().length==40){
-          var poem = Poem(
-              name: value[0],
-              author: value[1],
-              poetic: value[2],
-              content: value[3]);
-
-          poemList.add(poem);
-        }
+        var poem = Poem(
+            name: value[0],
+            author: value[1],
+            poetic: value[2],
+            content: value[3]);
+        poemList.add(poem);
       }
     });
-    // poemList.sort((a,b)=>a.content.length.compareTo(b.content.length));
-    poemList.insert(0, Poem(name: 'ContentSet', author: 'null', poetic: 'null', content: strings.toSet().toList().join("")));
-    // poemList.add(Poem(name: 'ContentSet', author: 'null', poetic: 'null', content: strings.toSet().toList().join("")));
     return poemList;
   }
 
@@ -79,62 +57,38 @@ class DetailScreen extends StatelessWidget {
                 ),
                 Expanded(
                   child: ListView.builder(
-                    addAutomaticKeepAlives: false,
-                    addRepaintBoundaries: false,
                     itemCount: poems.length,
-                    itemExtent: 116,
+                    itemExtent: 100,
                     itemBuilder: (context, index) {
                       return InkWell(
                         child: Card(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                          child: Row(
                             children: [
-                              Row(
-                                children: [
-                                  Expanded(
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(8.0),
-                                        child: Text(
-                                          style: Theme.of(context).textTheme.titleLarge,
-                                          poems[index].name,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      )),
-                                  Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: SizedBox(
-                                        width: 45,
-                                        child: Text(
-                                          poems[index].author,
-                                          style: Theme.of(context).textTheme.titleSmall,
-                                        )),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: SizedBox(
-                                        width: 60,
-                                        child: Text(
-                                          poems[index].poetic,
-                                          style: Theme.of(context).textTheme.titleSmall,
-                                        )),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.all(8.0),
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: SizedBox(
+                                    width: 45,
                                     child: Text(
-                                      '${poems[index].content.length}字',
-                                    ),
-                                  ),
-                                ],
+                                      poems[index].author,
+                                      style: Theme.of(context).textTheme.titleSmall,
+                                    )),
                               ),
                               Padding(
                                 padding: const EdgeInsets.all(8.0),
-                                child: Text(
-                                  poems[index].content,
-                                  maxLines: 2,
-                                  style: Theme.of(context).textTheme.bodyLarge,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
+                                child: SizedBox(
+                                    width: 60,
+                                    child: Text(
+                                      poems[index].poetic,
+                                      style: Theme.of(context).textTheme.titleSmall,
+                                    )),
                               ),
+                              Flexible(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Text(
+                                      poems[index].name,
+                                    ),
+                                  )),
                             ],
                           ),
                         ),
