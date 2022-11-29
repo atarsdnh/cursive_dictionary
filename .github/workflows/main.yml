@@ -21,4 +21,4 @@ jobs:
         working-directory: ${{inputs.workingDir}}
       - uses: bluefireteam/flutter-gh-pages@v7
         with:
-          baseHref: /three_hundred_tang_poems/
+          baseHref: /cursive_dictionary/
