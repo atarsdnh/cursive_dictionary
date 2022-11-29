@@ -1,14 +1,20 @@
 import 'dart:ui';
 
 import 'package:csv/csv.dart';
+import 'package:cursive_dictionary/threehundred_tang_poems.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
 
-import 'DetailScreen.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:screenshot/screenshot.dart';
 
-void main() {
+import 'model/poem.dart';
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  Hive.registerAdapter(PoemAdapter());
+  await Hive.openBox<Poem>('poemBox');
   runApp(const MyApp());
 }
 
@@ -21,12 +27,14 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: '草書字典',
       theme: ThemeData(
-        primarySwatch: Colors.blueGrey,
+        brightness: Brightness.dark,
+        /* light theme settings */
       ),
-      // darkTheme: ThemeData(
-      //   brightness: Brightness.dark,
-      // ),
-      home: const MyHomePage(title: '草書字典'),
+      darkTheme: ThemeData(
+        brightness: Brightness.dark,
+        /* dark theme settings */
+      ),
+      themeMode: ThemeMode.dark,
       scrollBehavior: const MaterialScrollBehavior().copyWith(
         dragDevices: {
           PointerDeviceKind.mouse,
@@ -35,21 +43,14 @@ class MyApp extends StatelessWidget {
           PointerDeviceKind.unknown
         },
       ),
+      debugShowCheckedModeBanner: false,
+      home: const MyHomePage(title: '草書字典'),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
 
   final String title;
 
@@ -65,7 +66,7 @@ class _MyHomePageState extends State<MyHomePage> {
   String poems = '';
   List<Poem> poemList = [];
   void loadAsset() async {
-    await rootBundle.loadString('assets/poems.csv').then((value) {
+    await rootBundle.loadString('assets/300poems.csv').then((value) {
       poems = value;
       List<List<dynamic>> rowsAsListOfValues =
           const CsvToListConverter().convert(poems);
@@ -82,12 +83,12 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   /// Regex of Chinese character.
-  static const String regexZh = '[\\u4e00-\\u9fa5]';
+  // static const String regexZh = '[\\u4e00-\\u9fa5]';
 
   @override
   void initState(){
     super.initState();
-    loadAsset();
+    // loadAsset();
   }
 
   @override
@@ -239,7 +240,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<void> _navigateAndDisplaySelection(BuildContext context) async {
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => DetailScreen()),
+      MaterialPageRoute(builder: (context) => const ThreeHundredTangPoems()),
     );
 
     if (!mounted) return;
@@ -259,15 +260,15 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {});
   }
 
-  _onCameraClick() {
-    screenshotController
-        .capture(delay: Duration(milliseconds: 10))
-        .then((capturedImage) async {
-      ShowCapturedWidget(context, capturedImage!);
-    }).catchError((onError) {
-      print(onError);
-    });
-  }
+  // _onCameraClick() {
+  //   screenshotController
+  //       .capture(delay: Duration(milliseconds: 10))
+  //       .then((capturedImage) async {
+  //     ShowCapturedWidget(context, capturedImage!);
+  //   }).catchError((onError) {
+  //     print(onError);
+  //   });
+  // }
 
   Future<dynamic> ShowCapturedWidget(
       BuildContext context, Uint8List capturedImage) {
@@ -286,36 +287,4 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-}
-
-class Poem {
-  final String name;
-  final String author;
-  final String poetic;
-  final String content;
-
-  const Poem({
-    required this.name,
-    required this.author,
-    required this.poetic,
-    required this.content,
-  });
-
-  // Convert a Poem into a Map. The keys must correspond to the names of the
-  // columns in the database.
-  Map<String, dynamic> toMap() {
-    return {
-      'name': name,
-      'author': author,
-      'poetic': poetic,
-      'content': content,
-    };
-  }
-
-  // Implement toString to make it easier to see information about
-  // each poem when using the print statement.
-  @override
-  String toString() {
-    return 'Poem{name: $name, author: $author, poetic: $poetic, content: $content}';
-  }
 }

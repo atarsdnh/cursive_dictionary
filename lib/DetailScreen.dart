@@ -2,10 +2,10 @@ import 'package:csv/csv.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'main.dart';
+import 'model/poem.dart';
 
 class DetailScreen extends StatelessWidget {
-  DetailScreen({super.key});
+  const DetailScreen({super.key});
 
   static const List<String> poetics = [
     '全部',
@@ -18,9 +18,9 @@ class DetailScreen extends StatelessWidget {
     '樂府',
   ];
 
-  final List<Poem> poemList = [];
   loadAsset() async {
-    await rootBundle.loadString('assets/poems.csv').then((value) {
+    List<Poem> poemList = [];
+    await rootBundle.loadString('poems/300poems.csv').then((value) {
       List<List<dynamic>> rowsAsListOfValues =
           const CsvToListConverter().convert(value);
       for (var i = 1; i < rowsAsListOfValues.length; i++) {
@@ -49,12 +49,6 @@ class DetailScreen extends StatelessWidget {
             if (snapshot.hasData) {
               List<Poem> poems = snapshot.data;
               children = <Widget>[
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Row(children: [
-                    Text('作者'),Text('詩體'),Text('詩名')
-                  ],),
-                ),
                 Expanded(
                   child: ListView.builder(
                     itemCount: poems.length,
